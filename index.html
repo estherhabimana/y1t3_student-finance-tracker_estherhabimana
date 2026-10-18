@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Student Finance Tracker | Summative</title>
+</head>
+<body>
+    <!-- 
+    
+    Student Finance Tracker (budgets, transactions, search)
+     
+    You’ll build an accessible, responsive, vanilla HTML/CSS/JS app that demonstrates: 
+    semantic structure, 
+    mobile-first layouts, 
+    DOM manipulation, 
+    events, 
+    regex validation & search, 
+    basic persistence, 
+    and clean modular code.
+    
+    -->
+    <h1>Hello Summative</h1>
+
+    <nav>
+        <ul>
+            <li>About</li>
+            <li>Dashboard/Stats</li>
+            <li>Records Table (or cards on mobile)</li>
+            <li>Add/Edit Form</li>
+            <li>Settings</li>
+        </ul>
+    </nav>
+
+
+    <main id="main" tabindex="-1">
+
+        <section id="about">
+        <h2>About</h2>
+        <p>Building an app to help with tracking student spending. Search it with regex, and see where your money goes.</p>
+        <p>Contact: <a href="https://github.com/estherhabimana">GitHub</a> ·
+            <a href="mailto:e.habimana@alustudent.com">e.habimana@alustudent.com</a></p>
+        </section>
+
+        <section id="dashboard">
+        <h2>Dashboard</h2>
+        <div class="stats">
+            <div class="stat"><span class="stat-label">Total records</span><span id="stat-count">0</span></div>
+            <div class="stat"><span class="stat-label">Total spent</span><span id="stat-sum">0.00</span></div>
+            <div class="stat"><span class="stat-label">Top category</span><span id="stat-top">—</span></div>
+        </div>
+        <h3>Last 7 days</h3>
+        <div id="trend" class="trend" role="img" aria-label="Spending over the last 7 days"></div>
+        <p id="cap-polite" role="status" aria-live="polite"></p>
+        <p id="cap-assertive" role="alert" aria-live="assertive"></p>
+        </section>
+
+        <section id="records">
+        <h2>Records</h2>
+        <div class="toolbar">
+            <label for="search">Search (regex)</label>
+            <input id="search" type="text" placeholder="e.g. (coffee|tea)">
+            <label><input id="case-toggle" type="checkbox"> Case-insensitive</label>
+            <p id="search-status" role="status"></p>
+        </div>
+        <div class="table-wrap">
+            <table>
+            <caption class="sr-only">Expense records</caption>
+            <thead>
+                <tr>
+                <th scope="col"><button type="button" data-sort="date">Date</button></th>
+                <th scope="col"><button type="button" data-sort="description">Description</button></th>
+                <th scope="col"><button type="button" data-sort="amount">Amount</button></th>
+                <th scope="col">Category</th>
+                <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="records-body"></tbody>
+            </table>
+        </div>
+        </section>
+
+        <section id="form">
+        <h2 id="form-title">Add record</h2>
+        <form id="record-form" novalidate>
+            <input type="hidden" id="record-id">
+
+            <label for="description">Description</label>
+            <input id="description" type="text" aria-describedby="description-error">
+            <p class="error" id="description-error"></p>
+
+            <label for="amount">Amount</label>
+            <input id="amount" type="text" inputmode="decimal" aria-describedby="amount-error">
+            <p class="error" id="amount-error"></p>
+
+            <label for="category">Category</label>
+            <input id="category" type="text" list="category-list" aria-describedby="category-error">
+            <datalist id="category-list"></datalist>
+            <p class="error" id="category-error"></p>
+
+            <label for="date">Date (YYYY-MM-DD)</label>
+            <input id="date" type="text" placeholder="2025-09-29" aria-describedby="date-error">
+            <p class="error" id="date-error"></p>
+
+            <button type="submit">Save</button>
+            <button type="button" id="cancel-edit" hidden>Cancel</button>
+            <p id="form-status" role="status"></p>
+        </form>
+        </section>
+
+        <section id="settings">
+        <h2>Settings</h2>
+        <label for="base-currency">Base currency</label>
+        <input id="base-currency" type="text" value="USD">
+
+        <label for="rate-1">Rate for EUR</label>
+        <input id="rate-1" type="text" value="0.92">
+
+        <label for="rate-2">Rate for GBP</label>
+        <input id="rate-2" type="text" value="0.79">
+
+        <label for="cap">Spending cap</label>
+        <input id="cap" type="text" inputmode="decimal" value="0">
+
+        <button type="button" id="export-btn">Export JSON</button>
+        <label for="import-file">Import JSON</label>
+        <input id="import-file" type="file" accept="application/json">
+        <p id="settings-status" role="status"></p>
+        </section>
+    </main>
+
+</body>
+<script src="script.js"></script>
+</html>
