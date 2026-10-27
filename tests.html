@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tests</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    .pass { color: #0a6b2d; }
+    .fail { color: #b00020; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Tests</h1>
+  <p id="summary" role="status"></p>
+  <ul id="results"></ul>
+
+  <script type="module">
+    import { validateDescription, validateAmount, validateDate, validateCategory, validateCap, validateCurrencyCode, validateRate, checkImportedRecords} from './Scripts/validators.js';
+    import { totalSum, topCategory, last7Days, capStatus } from './Scripts/stats.js';
+
+    let passed = 0;
+    let failed = 0;
+    const list = document.querySelector('#results');
+
+    function check(name, actual, expected) {
+      const good = actual === expected;
+      if (good) passed++; else failed++;
+      const item = document.createElement('li');
+      item.className = good ? 'pass' : 'fail';
+      item.textContent = (good ? 'PASS: ' : 'FAIL: ') + name;
+      list.append(item);
+    }
+
+    //descriptions
+    check('plain description is ok', validateDescription('Lunch at cafeteria').ok, true);
+    check('leading space is rejected', validateDescription(' Lunch').ok, false);
+    check('trailing space is rejected', validateDescription('Lunch ').ok, false);
+    check('empty is rejected', validateDescription('').ok, false);
+    check('double spaces are collapsed', validateDescription('Lunch  at   cafe').value, 'Lunch at cafe');
+    check('duplicate word is caught', validateDescription('Lunch at the the cafe').ok, false);
+    check('duplicate word ignores case', validateDescription('The the cafe').ok, false);
+    check('similar words are not flagged', validateDescription('the then cafe').ok, true);
+
+    //amounts
+    check('whole number is ok', validateAmount('12').ok, true);
+    check('two decimals are ok', validateAmount('12.50').ok, true);
+    check('zero is ok', validateAmount('0').ok, true);
+    check('three decimals are rejected', validateAmount('12.505').ok, false);
+    check('leading zero is rejected', validateAmount('012').ok, false);
+    check('negative is rejected', validateAmount('-5').ok, false);
+    check('letters are rejected', validateAmount('abc').ok, false);
+    check('amount becomes a number', validateAmount('12.5').value, 12.5);
+
+    //date
+    check('real date is ok', validateDate('2026-09-29').ok, true);
+    check('month 13 is rejected', validateDate('2026-13-01').ok, false);
+    check('wrong format is rejected', validateDate('29/09/2026').ok, false);
+    check('Feb 30 is rejected', validateDate('2026-02-30').ok, false);
+    check('leap day 2024 is ok', validateDate('2024-02-29').ok, true);
+    check('leap day 2026 is rejected', validateDate('2026-02-29').ok, false);
+
+    //category 
+    check('simple category is ok', validateCategory('Food').ok, true);
+    check('hyphen and space are ok', validateCategory('Part-time job').ok, true);
+    check('digits are rejected', validateCategory('Food2').ok, false);
+    check('trailing hyphen is rejected', validateCategory('Food-').ok, false);
+
+    //cap, currency, rate 
+    check('cap 0 is ok', validateCap('0').ok, true);
+    check('cap text is rejected', validateCap('lots').ok, false);
+    check('currency code is ok', validateCurrencyCode('USD').ok, true);
+    check('lowercase code is rejected', validateCurrencyCode('usd').ok, false);
+    check('rate 0.92 is ok', validateRate('0.92').ok, true);
+    check('rate 0 is rejected', validateRate('0').ok, false);
+
+    //importing records 
+    const sample = {
+      id: 'rec_0001', description: 'Lunch at cafeteria', amount: 12.5, category: 'Food',
+      date: '2026-09-29', createdAt: '2026-09-29T12:30:00.000Z', updatedAt: '2026-09-29T12:30:00.000Z'
+    };
+    check('good file has no problems', checkImportedRecords([sample]).length, 0);
+    check('survives a JSON round trip', checkImportedRecords(JSON.parse(JSON.stringify([sample]))).length, 0);
+    check('not a list is rejected', checkImportedRecords({}).length > 0, true);
+    check('bad id is rejected', checkImportedRecords([{ ...sample, id: 'x1' }]).length > 0, true);
+    check('repeated id is rejected', checkImportedRecords([sample, sample]).length > 0, true);
+    check('text amount is rejected', checkImportedRecords([{ ...sample, amount: '12.5' }]).length > 0, true);
+    check('impossible date is rejected', checkImportedRecords([{ ...sample, date: '2026-02-30' }]).length > 0, true);
+    check('missing date is rejected', checkImportedRecords([{ ...sample, date: undefined }]).length > 0, true);
+    check('bad timestamp is rejected', checkImportedRecords([{ ...sample, createdAt: 'yesterday' }]).length > 0, true);
+    check('duplicate words are fine on import', checkImportedRecords([{ ...sample, description: 'the the cafe' }]).length, 0);
+
+    //stats 
+    check('sum avoids float errors', totalSum([{ amount: 0.1 }, { amount: 0.2 }]), 0.3);
+
+    const top = topCategory([
+      { category: 'Food', amount: 5 },
+      { category: 'Food', amount: 7 },
+      { category: 'Books', amount: 10 }
+    ]);
+    check('top category name', top.name, 'Food');
+    check('top category total', top.total, 12);
+    check('top category with no records', topCategory([]), null);
+
+    const today = new Date(2026, 9, 30);
+    const days = last7Days([
+      { date: '2026-10-30', amount: 5 },
+      { date: '2026-10-23', amount: 99 }  
+    ], today);
+    check('7 days are returned', days.length, 7);
+    check('first day is 6 days back', days[0].date, '2026-10-24');
+    check('today total is counted', days[6].total, 5);
+    check('old record is ignored', totalSum(days), 5);
+
+    check('no cap set', capStatus(60, 0).state, 'none');
+    check('under the cap', capStatus(60, 100).state, 'under');
+    check('exactly at the cap counts as under', capStatus(100, 100).state, 'under');
+    check('over the cap', capStatus(60.5, 50).state, 'over');
+
+    document.querySelector('#summary').textContent = passed + ' passed, ' + failed + ' failed';
+  </script>
+</body>
+</html>

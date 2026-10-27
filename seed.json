@@ -1,0 +1,18 @@
+[
+    {
+        "id": "rec_0001", "description": "Lunch at Cafeteria",
+        "amount": 10000,
+        "category": "Food",
+        "date": "2026-06-10",
+        "createdAt": "2026-06-10T01:00:00", 
+        "updatedAt": "2026-06-10T01:00:00" 
+    },
+    {
+        "id": "rec_0002", "description": "Sneakers",
+        "amount": 50000,
+        "category": "Fashion",
+        "date": "2026-05-14",
+        "createdAt": "2026-05-14T03:30:00", 
+        "updatedAt": "2026-05-14T03:30:00" 
+    }
+]
